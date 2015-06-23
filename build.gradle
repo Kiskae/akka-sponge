@@ -1,0 +1,51 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.1'
+    }
+}
+
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '1.2.1'
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_7
+targetCompatibility = JavaVersion.VERSION_1_7
+
+version = "0.1.0"
+group = 'net.serverpeon.sponge'
+
+repositories {
+    mavenCentral()
+    maven {
+        name 'Sponge maven repo'
+        url 'http://repo.spongepowered.org/maven'
+    }
+}
+
+tasks.withType(ScalaCompile) {
+    scalaCompileOptions.useAnt = false
+}
+
+dependencies {
+    compile group: 'org.spongepowered', name: 'spongeapi', version: '+'
+    compile group: 'com.typesafe.akka', name: 'akka-actor_2.11', version: '2.3.3'
+}
+
+shadowJar {
+    classifier = "bundled"
+
+    dependencies {
+        include(dependency("com.typesafe.akka:akka-actor_2.11"))
+        include(dependency("org.scala-lang:scala-library"))
+    }
+    append('reference.conf')
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.4'
+}
