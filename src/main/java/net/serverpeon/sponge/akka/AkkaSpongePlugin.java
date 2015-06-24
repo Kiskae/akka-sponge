@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import net.serverpeon.sponge.akka.ext.ExtensionAccessor;
+import net.serverpeon.sponge.akka.util.ConsumerPredicate;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.event.Subscribe;
@@ -24,8 +25,9 @@ import org.spongepowered.api.util.command.spec.CommandExecutor;
 import org.spongepowered.api.util.command.spec.CommandSpec;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static net.serverpeon.sponge.akka.util.ConsumerPredicate.wrap;
 
-@Plugin(id = AkkaSpongePlugin.ID, name = "Akka for Sponge", version = "0.1.0")
+@Plugin(id = AkkaSpongePlugin.ID, name = "Akka-Sponge", version = "0.1.0")
 public class AkkaSpongePlugin {
     public final static String ID = "akka-sponge";
     private final AkkaService system;
@@ -40,6 +42,7 @@ public class AkkaSpongePlugin {
                 ActorSystem.create("akka-sponge", loadConfig()),
                 checkNotNull(game, "game == NULL")
         );
+        log.info("Akka-Sponge initialized ({})", this.system.system().toString());
     }
 
     private static Config loadConfig() {
@@ -55,7 +58,12 @@ public class AkkaSpongePlugin {
             this.log.error("Unable to provide AkkaService since it is already registered!", e);
         }
 
-        this.sm.provide(CommandService.class).get().register(this, createDumpCommand(), "akka-dump");
+        this.sm.potentiallyProvide(CommandService.class).executeWhenPresent(wrap(new ConsumerPredicate.Consumer<CommandService>() {
+            @Override
+            public void apply(CommandService commandService) {
+                commandService.register(AkkaSpongePlugin.this, createDumpCommand(), "akka-dump");
+            }
+        }));
     }
 
     private CommandCallable createDumpCommand() {
