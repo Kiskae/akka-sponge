@@ -10,7 +10,7 @@ import net.serverpeon.sponge.akka.util.ConsumerPredicate;
 import org.slf4j.Logger;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.event.Subscribe;
-import org.spongepowered.api.event.state.InitializationEvent;
+import org.spongepowered.api.event.state.PreInitializationEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.service.ProviderExistsException;
 import org.spongepowered.api.service.ServiceManager;
@@ -51,7 +51,7 @@ public class AkkaSpongePlugin {
     }
 
     @Subscribe
-    public void onInitialization(InitializationEvent event) {
+    public void onPreInitialization(PreInitializationEvent event) {
         try {
             this.sm.setProvider(this, AkkaService.class, system);
         } catch (ProviderExistsException e) {
