@@ -3,14 +3,15 @@ package net.serverpeon.sponge.akka.ext;
 import akka.dispatch.DispatcherPrerequisites;
 import akka.dispatch.ExecutorServiceConfigurator;
 import akka.dispatch.ExecutorServiceFactory;
-import com.google.common.base.Supplier;
 import com.typesafe.config.Config;
 import org.spongepowered.api.Game;
-import org.spongepowered.api.service.scheduler.SynchronousScheduler;
-import org.spongepowered.api.service.scheduler.Task;
+import org.spongepowered.api.service.scheduler.SchedulerService;
 
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.AbstractExecutorService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 class ExecutorConfigurator extends ExecutorServiceConfigurator {
     private final ExecutorService executor;
@@ -19,7 +20,7 @@ class ExecutorConfigurator extends ExecutorServiceConfigurator {
                                 DispatcherPrerequisites prereq) {
         super(config, prereq);
         this.executor = new SpongeExecutorService(
-                game.getSyncScheduler(),
+                game.getScheduler(),
                 plugin
         );
     }
@@ -43,12 +44,14 @@ class ExecutorConfigurator extends ExecutorServiceConfigurator {
     }
 
     private static class SpongeExecutorService extends AbstractExecutorService {
-        private final SynchronousScheduler scheduler;
+        private final SchedulerService scheduler;
         private final Object plugin;
+        private final String taskName;
 
-        public SpongeExecutorService(SynchronousScheduler scheduler, Object plugin) {
+        public SpongeExecutorService(SchedulerService scheduler, Object plugin) {
             this.scheduler = scheduler;
             this.plugin = plugin;
+            this.taskName = "SpongeAkka-Task-" + plugin.getClass().getSimpleName();
         }
 
         @Override
@@ -78,19 +81,10 @@ class ExecutorConfigurator extends ExecutorServiceConfigurator {
 
         @Override
         public void execute(Runnable command) {
-            scheduler.runTask(
-                    plugin,
-                    command
-            ).or(TaskRejecter.INSTANCE);
-        }
-    }
-
-    private static class TaskRejecter implements Supplier<Task> {
-        public static final TaskRejecter INSTANCE = new TaskRejecter();
-
-        @Override
-        public Task get() {
-            throw new RejectedExecutionException();
+            this.scheduler.getTaskBuilder()
+                    .execute(command)
+                    .name(this.taskName)
+                    .submit(this.plugin);
         }
     }
 }
