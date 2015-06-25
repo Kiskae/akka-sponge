@@ -51,7 +51,7 @@ class ExecutorConfigurator extends ExecutorServiceConfigurator {
         public SpongeExecutorService(SchedulerService scheduler, Object plugin) {
             this.scheduler = scheduler;
             this.plugin = plugin;
-            this.taskName = "SpongeAkka-Task-" + plugin.getClass().getSimpleName();
+            this.taskName = "SpongeAkka-Executor-" + plugin.getClass().getSimpleName();
         }
 
         @Override
