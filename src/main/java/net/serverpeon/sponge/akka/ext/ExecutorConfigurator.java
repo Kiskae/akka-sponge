@@ -56,12 +56,12 @@ class ExecutorConfigurator extends ExecutorServiceConfigurator {
 
         @Override
         public void shutdown() {
-            throw new UnsupportedOperationException("Unable to terminate delegate executor");
+            //NOOP
         }
 
         @Override
         public List<Runnable> shutdownNow() {
-            throw new UnsupportedOperationException("Unable to terminate delegate executor");
+            return ImmutableList.of();
         }
 
         @Override
@@ -76,7 +76,7 @@ class ExecutorConfigurator extends ExecutorServiceConfigurator {
 
         @Override
         public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
-            throw new UnsupportedOperationException("Unable to terminate delegate executor");
+            return false;
         }
 
         @Override
