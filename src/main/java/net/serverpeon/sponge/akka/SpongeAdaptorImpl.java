@@ -109,7 +109,7 @@ class SpongeAdaptorImpl implements SpongeAdaptor {
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            if ("actorOf".endsWith(method.getName()) && args[0] != null) {
+            if ("actorOf".equals(method.getName()) && args[0] != null) {
                 args[0] = this.propsAdaptor.apply((Props) args[0]);
             }
             return method.invoke(this.backingFactory, args);
