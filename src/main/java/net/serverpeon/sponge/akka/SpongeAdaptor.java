@@ -22,6 +22,8 @@ public interface SpongeAdaptor {
     /**
      * The {@link ActorRefFactory} returned by this method allows the creation of sponge actors.
      * Sponge actors perform all their processing on the Main Server Thread.
+     * <br />
+     * The factory returned by this method will create actors in the user root of {@link #underlyingSystem()}
      *
      * @return A modified {@link ActorRefFactory} which creates sponge actors in the user root.
      */
@@ -31,9 +33,13 @@ public interface SpongeAdaptor {
     /**
      * The {@link ActorRefFactory} returned by this method allows the creation of sponge actors.
      * Sponge actors perform all their processing on the Main Server Thread.
+     * <br />
+     * The factory returned by this method will create actors in the given context, if that context is a part of
+     * {@link #underlyingSystem()}
      *
      * @param context The context in which the actors should be created.
      * @return A modified {@link ActorRefFactory} which creates sponge actors as children of the given context.
+     * @throws IllegalArgumentException If the given context belongs to a different ActorSystem than {@link #underlyingSystem()}.
      */
     @Nonnull
     ActorRefFactory bindToMain(final @Nonnull ActorContext context);
