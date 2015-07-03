@@ -3,6 +3,7 @@ package net.serverpeon.sponge.akka.ext;
 import akka.dispatch.*;
 import com.typesafe.config.Config;
 import org.spongepowered.api.Game;
+import org.spongepowered.api.plugin.PluginContainer;
 import scala.concurrent.duration.Duration;
 
 import java.util.concurrent.TimeUnit;
@@ -21,7 +22,7 @@ class MessageConfigurator extends MessageDispatcherConfigurator {
     private final ExecutorServiceConfigurator executorConfigurator;
     private final DispatcherPrerequisites prereq;
 
-    public MessageConfigurator(Object plugin, Game game, Config config,
+    public MessageConfigurator(PluginContainer plugin, Game game, Config config,
                                DispatcherPrerequisites prereq) {
         super(config, prereq);
         checkNotNull(plugin);

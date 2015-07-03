@@ -3,8 +3,10 @@ package net.serverpeon.sponge.akka.ext;
 import akka.dispatch.DispatcherPrerequisites;
 import akka.dispatch.ExecutorServiceConfigurator;
 import akka.dispatch.ExecutorServiceFactory;
+import com.google.common.collect.ImmutableList;
 import com.typesafe.config.Config;
 import org.spongepowered.api.Game;
+import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.service.scheduler.SchedulerService;
 
 import java.util.List;
@@ -16,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 class ExecutorConfigurator extends ExecutorServiceConfigurator {
     private final ExecutorService executor;
 
-    public ExecutorConfigurator(Object plugin, Game game, Config config,
+    public ExecutorConfigurator(PluginContainer plugin, Game game, Config config,
                                 DispatcherPrerequisites prereq) {
         super(config, prereq);
         this.executor = new SpongeExecutorService(
@@ -45,13 +47,13 @@ class ExecutorConfigurator extends ExecutorServiceConfigurator {
 
     private static class SpongeExecutorService extends AbstractExecutorService {
         private final SchedulerService scheduler;
-        private final Object plugin;
+        private final PluginContainer plugin;
         private final String taskName;
 
-        public SpongeExecutorService(SchedulerService scheduler, Object plugin) {
+        public SpongeExecutorService(SchedulerService scheduler, PluginContainer plugin) {
             this.scheduler = scheduler;
             this.plugin = plugin;
-            this.taskName = "SpongeAkka-Executor-" + plugin.getClass().getSimpleName();
+            this.taskName = "SpongeAkka-Executor-" + plugin.getId();
         }
 
         @Override
@@ -84,7 +86,7 @@ class ExecutorConfigurator extends ExecutorServiceConfigurator {
             this.scheduler.getTaskBuilder()
                     .execute(command)
                     .name(this.taskName)
-                    .submit(this.plugin);
+                    .submit(this.plugin.getInstance());
         }
     }
 }

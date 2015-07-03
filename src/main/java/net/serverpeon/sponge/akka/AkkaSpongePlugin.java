@@ -1,85 +1,35 @@
 package net.serverpeon.sponge.akka;
 
-import akka.actor.ActorSystem;
-import akka.actor.ActorSystemImpl;
 import com.google.inject.Inject;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import net.serverpeon.sponge.akka.ext.ExtensionAccessor;
-import net.serverpeon.sponge.akka.util.ConsumerPredicate;
 import org.slf4j.Logger;
-import org.spongepowered.api.Game;
 import org.spongepowered.api.event.Subscribe;
 import org.spongepowered.api.event.state.PreInitializationEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.service.ProviderExistsException;
 import org.spongepowered.api.service.ServiceManager;
-import org.spongepowered.api.service.command.CommandService;
-import org.spongepowered.api.text.Texts;
-import org.spongepowered.api.util.command.CommandCallable;
-import org.spongepowered.api.util.command.CommandException;
-import org.spongepowered.api.util.command.CommandResult;
-import org.spongepowered.api.util.command.CommandSource;
-import org.spongepowered.api.util.command.args.CommandContext;
-import org.spongepowered.api.util.command.spec.CommandExecutor;
-import org.spongepowered.api.util.command.spec.CommandSpec;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static net.serverpeon.sponge.akka.util.ConsumerPredicate.wrap;
-
-@Plugin(id = AkkaSpongePlugin.ID, name = "Akka-Sponge", version = "0.1.0")
+@Plugin(id = AkkaSpongePlugin.ID, name = "Akka-Sponge", version = "0.2.0")
 public class AkkaSpongePlugin {
     public final static String ID = "akka-sponge";
-    private final AkkaService system;
     private final Logger log;
     private final ServiceManager sm;
+    private final AdaptorFactory factory;
 
     @Inject
-    protected AkkaSpongePlugin(Game game, Logger log, ServiceManager sm) throws ProviderExistsException {
+    protected AkkaSpongePlugin(Logger log, ServiceManager sm, AdaptorFactory factory) {
         this.log = log;
         this.sm = sm;
-        this.system = ExtensionAccessor.createService(
-                ActorSystem.create("akka-sponge", loadConfig()),
-                checkNotNull(game, "game == NULL")
-        );
-        log.info("Akka-Sponge initialized ({})", this.system.system().toString());
-    }
-
-    private static Config loadConfig() {
-        final ClassLoader cl = AkkaSpongePlugin.class.getClassLoader();
-        return ConfigFactory.load(cl, "akka-sponge/reference").withFallback(ConfigFactory.load(cl));
+        this.factory = factory;
+        log.info("Akka-Sponge initialized");
     }
 
     @Subscribe
     public void onPreInitialization(PreInitializationEvent event) {
         try {
-            this.sm.setProvider(this, AkkaService.class, system);
+            this.sm.setProvider(this, AkkaService.class, factory);
+            this.log.info("AkkaService registered");
         } catch (ProviderExistsException e) {
             this.log.error("Unable to provide AkkaService since it is already registered!", e);
         }
-
-        this.sm.potentiallyProvide(CommandService.class).executeWhenPresent(wrap(new ConsumerPredicate.Consumer<CommandService>() {
-            @Override
-            public void apply(CommandService commandService) {
-                commandService.register(AkkaSpongePlugin.this, createDumpCommand(), "akka-dump");
-            }
-        }));
-    }
-
-    private CommandCallable createDumpCommand() {
-        return CommandSpec.builder()
-                .description(Texts.of("Dump akka actor tree to the console"))
-                .permission("akka-sponge.dump")
-                .executor(new CommandExecutor() {
-                    @Override
-                    public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-                        final ActorSystem actorSystem = AkkaSpongePlugin.this.system.system();
-                        if (actorSystem instanceof ActorSystemImpl) {
-                            log.info("Akka actor tree:\n{}", ((ActorSystemImpl) actorSystem).printTree());
-                        }
-                        return CommandResult.empty();
-                    }
-                })
-                .build();
     }
 }
